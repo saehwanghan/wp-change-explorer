@@ -1,0 +1,529 @@
+<title>Within-Person Change Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#eef1f4; --surface:#ffffff; --surface-2:#f6f8fa;
+  --ink:#1b2227; --muted:#5c666e; --faint:#8b959c;
+  --line:#d9e0e6; --grid:#e9edf0;
+  --primary:#295c86; --primary-ink:#1f4a6e;
+  --accent:#d97e2b; --accent-ink:#b0631c; --accent-soft:#f0d9bf;
+  --lo:#3e77a6; --hi:#d97e2b;               /* spaghetti tint poles */
+  --hm-lo:#f2f6fa; --hm-mid:#9cc0dd; --hm-hi:#173a5e;
+  --good:#4c9a7a; --warn:#c98a2a; --crit:#b0563f;
+  --shadow:0 1px 2px rgba(20,40,60,.05),0 8px 24px -12px rgba(20,40,60,.18);
+}
+:root:not([data-theme="light"]){ @media (prefers-color-scheme:dark){
+  --bg:#0f151a; --surface:#161f26; --surface-2:#1b262e;
+  --ink:#e7ecf0; --muted:#9aa6ae; --faint:#6d7981;
+  --line:#26333c; --grid:#202b33;
+  --primary:#6ba3cf; --primary-ink:#8fbdde;
+  --accent:#e8964a; --accent-ink:#f0aa66; --accent-soft:#3a2c1c;
+  --lo:#6ba3cf; --hi:#e8964a;
+  --hm-lo:#141f27; --hm-mid:#3f6d92; --hm-hi:#9fc9ec;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px -14px rgba(0,0,0,.6);
+}}
+:root[data-theme="dark"]{
+  --bg:#0f151a; --surface:#161f26; --surface-2:#1b262e;
+  --ink:#e7ecf0; --muted:#9aa6ae; --faint:#6d7981;
+  --line:#26333c; --grid:#202b33;
+  --primary:#6ba3cf; --primary-ink:#8fbdde;
+  --accent:#e8964a; --accent-ink:#f0aa66; --accent-soft:#3a2c1c;
+  --lo:#6ba3cf; --hi:#e8964a;
+  --hm-lo:#141f27; --hm-mid:#3f6d92; --hm-hi:#9fc9ec;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px -14px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);margin:0;
+  font-family:"IBM Plex Sans",system-ui,sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased;}
+.wrap{max-width:1240px;margin:0 auto;padding-block:26px 60px;padding-inline:22px;}
+header.top{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;
+  padding-bottom:18px;border-bottom:1px solid var(--line);margin-bottom:22px;}
+.brandline{font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--primary);margin-bottom:8px;}
+h1{font-family:"Spectral",Georgia,serif;font-weight:600;font-size:clamp(26px,3.4vw,37px);
+  line-height:1.08;margin:0 0 9px;letter-spacing:-.01em;text-wrap:balance;}
+.lede{color:var(--muted);font-size:14.5px;max-width:66ch;margin:0;}
+.lede b{color:var(--ink);font-weight:500;}
+.tgl{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--muted);
+  border-radius:8px;padding:8px 12px;font-family:"IBM Plex Mono",monospace;font-size:12px;
+  cursor:pointer;display:flex;align-items:center;gap:7px;}
+.tgl:hover{border-color:var(--primary);color:var(--ink);}
+.app{display:grid;grid-template-columns:320px 1fr;gap:20px;align-items:start;}
+@media(max-width:900px){.app{grid-template-columns:1fr;}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);}
+.controls{padding:18px 18px 20px;position:sticky;top:16px;}
+@media(max-width:900px){.controls{position:static;}}
+.ctl-h{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--faint);margin:0 0 10px;}
+.seg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:18px;}
+.seg button{font-family:"IBM Plex Sans";font-size:12.5px;font-weight:500;text-align:center;
+  padding:9px 6px;border:1px solid var(--line);background:var(--surface-2);color:var(--muted);
+  border-radius:9px;cursor:pointer;line-height:1.15;transition:.12s;}
+.seg button:hover{border-color:var(--primary);color:var(--ink);}
+.seg button[aria-pressed="true"]{background:var(--primary);border-color:var(--primary);
+  color:#fff;box-shadow:0 4px 12px -4px var(--primary);}
+.gbox{border:1px dashed var(--line);border-radius:11px;padding:13px 14px 6px;margin-bottom:16px;
+  background:var(--surface-2);transition:opacity .15s;}
+.gbox .gh{font-family:"IBM Plex Mono";font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  margin:0 0 11px;display:flex;align-items:center;gap:7px;}
+.gh .dot{width:8px;height:8px;border-radius:50%;flex:none;}
+.gh.fx .dot{background:var(--primary);} .gh.fx{color:var(--primary-ink);}
+.gh.rd .dot{background:var(--accent);} .gh.rd{color:var(--accent-ink);}
+.gh.rs .dot{background:var(--muted);} .gh.rs{color:var(--muted);}
+.sldrow{margin-bottom:13px;}
+.sldrow.hide{display:none;}
+.sldrow label{display:flex;justify-content:space-between;align-items:baseline;
+  font-size:12.5px;color:var(--muted);margin-bottom:5px;gap:8px;}
+.sldrow label .nm{display:flex;align-items:baseline;gap:6px;}
+.sldrow .sym{font-family:"IBM Plex Mono";color:var(--ink);font-size:12.5px;}
+.sldrow .val{font-family:"IBM Plex Mono";font-size:12.5px;color:var(--primary-ink);
+  font-weight:500;font-variant-numeric:tabular-nums;}
+.sldrow.acc .val{color:var(--accent-ink);}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:3px;
+  background:var(--line);outline:none;cursor:pointer;margin:0;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:17px;height:17px;border-radius:50%;
+  background:var(--primary);border:2.5px solid var(--surface);box-shadow:0 1px 4px rgba(20,40,60,.35);cursor:pointer;}
+input[type=range]::-moz-range-thumb{width:17px;height:17px;border-radius:50%;background:var(--primary);
+  border:2.5px solid var(--surface);cursor:pointer;}
+input.acc::-webkit-slider-thumb{background:var(--accent);}
+input.acc::-moz-range-thumb{background:var(--accent);}
+input[type=range]:disabled{opacity:.4;cursor:not-allowed;}
+input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:3px;}
+.note{font-size:11px;line-height:1.45;color:var(--warn);margin:2px 0 8px;font-family:"IBM Plex Sans";display:none;}
+.note.on{display:block;}
+.row2{display:flex;gap:8px;margin-top:4px;}
+.btn{flex:1;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);border-radius:9px;
+  padding:9px;font-family:"IBM Plex Sans";font-size:12.5px;font-weight:500;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:7px;}
+.btn:hover{border-color:var(--primary);color:var(--primary-ink);}
+.btn[aria-pressed="true"]{background:var(--primary);border-color:var(--primary);color:#fff;}
+.btn[aria-pressed="true"]:hover{color:#fff;}
+/* main */
+.stage{display:flex;flex-direction:column;gap:18px;}
+.eq{padding:15px 18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+.eq .lab{font-family:"IBM Plex Mono";font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--faint);}
+.eqmath{font-family:"Spectral",Georgia,serif;font-size:clamp(16px,2.1vw,21px);color:var(--ink);letter-spacing:.01em;}
+.eqmath sub{font-size:.62em;} .eqmath sup{font-size:.62em;}
+.eqmath .fx{color:var(--primary-ink);font-weight:600;} .eqmath .rd{color:var(--accent-ink);font-weight:600;}
+.eqmath .op{color:var(--faint);margin:0 .12em;}
+.viz{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+@media(max-width:720px){.viz{grid-template-columns:1fr;}}
+.card{padding:16px 16px 14px;}
+.card.wide{grid-column:1 / -1;}
+.card h3{font-family:"Spectral",serif;font-weight:600;font-size:16.5px;margin:0 0 2px;}
+.card .sub{font-size:12px;color:var(--muted);margin:0 0 11px;min-height:1.3em;}
+.card .sub b{color:var(--ink);font-weight:500;}
+canvas{width:100%;display:block;}
+.legend{display:flex;gap:15px;flex-wrap:wrap;margin-top:9px;font-size:11.5px;color:var(--muted);
+  font-family:"IBM Plex Mono";}
+.legend i{display:inline-block;width:15px;height:0;border-top-width:2.5px;border-top-style:solid;margin-right:6px;vertical-align:middle;}
+.desc{padding:15px 18px;font-size:13.5px;color:var(--ink);line-height:1.58;
+  border-left:3px solid var(--accent);background:var(--surface-2);border-radius:0 12px 12px 0;box-shadow:var(--shadow);}
+.desc .tag{font-family:"IBM Plex Mono";font-size:10px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--accent);display:block;margin-bottom:6px;}
+.desc b{color:var(--primary-ink);font-weight:600;} .desc em{color:var(--accent-ink);font-style:normal;font-weight:600;}
+footer{margin-top:26px;padding-top:16px;border-top:1px solid var(--line);font-size:11.5px;color:var(--faint);
+  display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-family:"IBM Plex Mono";}
+footer a{color:var(--primary);text-decoration:none;}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="brandline">HDF 380K.3 · Analyzing Development &amp; Change</div>
+      <h1>Within-Person Change Explorer</h1>
+      <p class="lede">Set the <b>shape of change</b> over time and the <b>random effects</b> that let people differ from the average trajectory. Watch how variance components reshape the fan of individual curves, grow the total variance across occasions, and induce a correlation pattern among repeated measures — the <b>G-side</b> companion to the covariance-structure (R-side) explorer.</p>
+    </div>
+    <button class="tgl" id="themeBtn" aria-label="Toggle light or dark theme">◐ Theme</button>
+  </header>
+
+  <div class="app">
+    <!-- ============ CONTROLS ============ -->
+    <aside class="panel controls">
+      <div class="ctl-h">Shape of the mean trajectory</div>
+      <div class="seg" role="group" aria-label="Trajectory shape">
+        <button data-mode="linear"    aria-pressed="true">Linear</button>
+        <button data-mode="quadratic" aria-pressed="false">Quadratic</button>
+        <button data-mode="piecewise" aria-pressed="false">Piecewise</button>
+      </div>
+
+      <!-- FIXED EFFECTS -->
+      <div class="gbox">
+        <p class="gh fx"><span class="dot"></span>Fixed effects — the average curve (γ)</p>
+        <div class="sldrow" data-row="g00">
+          <label><span class="nm"><span class="sym">γ<sub>00</sub></span> intercept</span><span class="val" id="v-g00"></span></label>
+          <input type="range" id="s-g00" min="20" max="80" step="1" value="50">
+        </div>
+        <div class="sldrow" data-row="g10">
+          <label><span class="nm"><span class="sym">γ<sub>10</sub></span> <span id="lb-g10">linear slope</span></span><span class="val" id="v-g10"></span></label>
+          <input type="range" id="s-g10" min="-6" max="6" step="0.1" value="2.5">
+        </div>
+        <div class="sldrow" data-row="g20">
+          <label><span class="nm"><span class="sym">γ<sub>20</sub></span> <span id="lb-g20">quadratic</span></span><span class="val" id="v-g20"></span></label>
+          <input type="range" id="s-g20" min="-1" max="1" step="0.05" value="-0.35">
+        </div>
+      </div>
+
+      <!-- RANDOM EFFECTS -->
+      <div class="gbox">
+        <p class="gh rd"><span class="dot"></span>Random effects — how people differ (SD)</p>
+        <div class="sldrow acc" data-row="tU0">
+          <label><span class="nm"><span class="sym">τ<sub>U0</sub></span> intercept SD</span><span class="val" id="v-tU0"></span></label>
+          <input type="range" class="acc" id="s-tU0" min="0" max="12" step="0.25" value="5">
+        </div>
+        <div class="sldrow acc" data-row="tU1">
+          <label><span class="nm"><span class="sym">τ<sub>U1</sub></span> <span id="lb-tU1">linear-slope SD</span></span><span class="val" id="v-tU1"></span></label>
+          <input type="range" class="acc" id="s-tU1" min="0" max="3" step="0.05" value="1">
+        </div>
+        <div class="sldrow acc" data-row="tU2">
+          <label><span class="nm"><span class="sym">τ<sub>U2</sub></span> <span id="lb-tU2">quad-slope SD</span></span><span class="val" id="v-tU2"></span></label>
+          <input type="range" class="acc" id="s-tU2" min="0" max="0.6" step="0.02" value="0.16">
+        </div>
+        <p class="note" id="note-id"></p>
+        <div class="sldrow acc" data-row="r01">
+          <label><span class="nm"><span class="sym">r<sub>01</sub></span> intercept–slope corr</span><span class="val" id="v-r01"></span></label>
+          <input type="range" class="acc" id="s-r01" min="-0.9" max="0.9" step="0.05" value="0">
+        </div>
+      </div>
+
+      <!-- RESIDUAL + DESIGN -->
+      <div class="gbox">
+        <p class="gh rs"><span class="dot"></span>Residual &amp; design</p>
+        <div class="sldrow" data-row="sigE">
+          <label><span class="nm"><span class="sym">σ<sub>e</sub></span> residual SD</span><span class="val" id="v-sigE"></span></label>
+          <input type="range" id="s-sigE" min="0" max="7" step="0.25" value="2">
+        </div>
+        <div class="sldrow" data-row="rho">
+          <label><span class="nm"><span class="sym">ρ</span> AR(1) residual corr</span><span class="val" id="v-rho"></span></label>
+          <input type="range" id="s-rho" min="0" max="0.9" step="0.05" value="0">
+        </div>
+        <div class="sldrow" data-row="n">
+          <label><span class="nm"><span class="sym">n</span> occasions</span><span class="val" id="v-n"></span></label>
+          <input type="range" id="s-n" min="3" max="10" step="1" value="6">
+        </div>
+        <div class="sldrow" data-row="knot">
+          <label><span class="nm"><span class="sym">knot</span> breakpoint</span><span class="val" id="v-knot"></span></label>
+          <input type="range" id="s-knot" min="1" max="8" step="1" value="3">
+        </div>
+      </div>
+
+      <div class="row2">
+        <button class="btn" id="resampleBtn">↻ Resample people</button>
+        <button class="btn" id="residBtn" aria-pressed="true">Residual scatter</button>
+      </div>
+    </aside>
+
+    <!-- ============ STAGE ============ -->
+    <main class="stage">
+      <div class="panel eq">
+        <span class="lab">Model</span>
+        <div class="eqmath" id="eq"></div>
+      </div>
+
+      <div class="panel card wide">
+        <h3>Individual trajectories</h3>
+        <p class="sub" id="traj-sub"></p>
+        <canvas id="cv-traj" height="430" aria-label="Spaghetti plot of simulated individual trajectories"></canvas>
+        <div class="legend">
+          <span><i style="border-color:var(--primary);border-top-width:3.5px"></i>average (fixed) curve</span>
+          <span><i style="border-color:var(--lo)"></i>lower intercept</span>
+          <span><i style="border-color:var(--hi)"></i>higher intercept</span>
+          <span id="leg-resid"><i style="border-top-style:dotted;border-color:var(--muted)"></i>observed point (+ residual)</span>
+        </div>
+      </div>
+
+      <div class="viz">
+        <div class="panel card">
+          <h3>Total variance over time</h3>
+          <p class="sub">Var(y<sub>t</sub>) at each occasion — <b id="var-note"></b></p>
+          <canvas id="cv-var" height="250" aria-label="Total variance of the outcome at each occasion"></canvas>
+        </div>
+        <div class="panel card">
+          <h3>Implied correlation matrix</h3>
+          <p class="sub">Corr(y<sub>s</sub>, y<sub>t</sub>) across occasions · <b id="hm-note"></b></p>
+          <canvas id="cv-hm" height="250" aria-label="Implied correlation matrix among occasions"></canvas>
+        </div>
+      </div>
+
+      <div class="panel desc">
+        <span class="tag">What you're seeing</span>
+        <div id="explain"></div>
+      </div>
+    </main>
+  </div>
+
+  <footer>
+    <span>G-side random-effects simulator · pairs with the Covariance Structure Explorer</span>
+    <span>y<sub>ti</sub> = (γ + U<sub>i</sub>)′z<sub>t</sub> + e<sub>ti</sub></span>
+  </footer>
+</div>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const CSS=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+/* ---------- state ---------- */
+const S={mode:"linear",g00:50,g10:2.5,g20:-0.35,tU0:5,tU1:1,tU2:0.16,r01:0,sigE:2,rho:0,n:6,knot:3,resid:true};
+const NP=42;                         // people drawn
+let seed=20260911;
+const mulberry=s=>()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};
+let rng=mulberry(seed);
+function randn(){let u=0,v=0;while(!u)u=rng();while(!v)v=rng();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+
+/* ---------- model algebra ---------- */
+function dim(){return S.mode==="linear"?2:3;}
+// design vector for random/fixed effects at occasion t
+function zvec(t){
+  if(S.mode==="linear")   return [1,t];
+  if(S.mode==="quadratic")return [1,t,t*t];
+  const k=S.knot;         return [1, Math.min(t,k), Math.max(0,t-k)]; // piecewise: two direct slopes
+}
+function gamma(){return S.mode==="linear"?[S.g00,S.g10]:[S.g00,S.g10,S.g20];}
+// G (covariance of random effects); r01 couples U0 & U1 only
+function Gmat(){
+  const d=dim(),sd=[S.tU0,S.tU1,S.tU2].slice(0,d);
+  const G=[];for(let i=0;i<d;i++){G.push(new Array(d).fill(0));G[i][i]=sd[i]*sd[i];}
+  G[0][1]=G[1][0]=S.r01*sd[0]*sd[1];
+  return G;
+}
+// Cholesky (lower) of small SPD-ish matrix; guards tiny negatives
+function chol(G){
+  const d=G.length,L=[];for(let i=0;i<d;i++)L.push(new Array(d).fill(0));
+  for(let i=0;i<d;i++)for(let j=0;j<=i;j++){
+    let s=G[i][j];for(let k=0;k<j;k++)s-=L[i][k]*L[j][k];
+    if(i===j)L[i][j]=Math.sqrt(Math.max(s,1e-9));
+    else L[i][j]=s/(L[j][j]||1e-9);
+  }
+  return L;
+}
+const dot=(a,b)=>a.reduce((s,x,i)=>s+x*b[i],0);
+function quad(z,G){let s=0;for(let i=0;i<z.length;i++)for(let j=0;j<z.length;j++)s+=z[i]*G[i][j]*z[j];return s;}
+// residual (R-side): AR(1) -> σ²ₑ·ρ^|s−t|  (diagonal ρ⁰=1 gives σ²ₑ, so total variance is unaffected by ρ)
+function residCov(s,t){return S.sigE*S.sigE*Math.pow(S.rho,Math.abs(s-t));}
+function varAt(t,G){return quad(zvec(t),G)+S.sigE*S.sigE;}
+function covST(s,t,G){let c=0,zs=zvec(s),zt=zvec(t);for(let i=0;i<zs.length;i++)for(let j=0;j<zt.length;j++)c+=zs[i]*G[i][j]*zt[j];return c+residCov(s,t);}
+
+/* ---------- draw people ---------- */
+function drawPeople(){
+  rng=mulberry(seed);const L=chol(Gmat()),d=dim(),g=gamma(),people=[];
+  for(let p=0;p<NP;p++){
+    const z=[];for(let i=0;i<d;i++)z.push(randn());
+    const U=[];for(let i=0;i<d;i++){let s=0;for(let k=0;k<=i;k++)s+=L[i][k]*z[k];U.push(s);}
+    people.push({U,U0:U[0]});
+  }
+  return {people,g};
+}
+
+/* ---------- geometry helpers ---------- */
+function fitCanvas(cv,h){
+  const dpr=Math.min(devicePixelRatio||1,2),w=cv.clientWidth;
+  cv.width=w*dpr;cv.height=h*dpr;const c=cv.getContext("2d");c.setTransform(dpr,0,0,dpr,0,0);
+  return{c,w,h};
+}
+function niceTicks(lo,hi,m=5){const r=hi-lo||1,raw=r/m,mag=Math.pow(10,Math.floor(Math.log10(raw)));
+  const st=[1,2,2.5,5,10].map(x=>x*mag).find(x=>x>=raw)||10*mag;
+  const t=[];for(let v=Math.ceil(lo/st)*st;v<=hi+1e-9;v+=st)t.push(+v.toFixed(6));return t;}
+function tint(u){ // -1..1 -> lo..hi color mix
+  const a=Math.max(-1,Math.min(1,u)),m=(a+1)/2;
+  const lo=hex(CSS("--lo")),hi=hex(CSS("--hi"));
+  return `rgb(${Math.round(lo[0]+(hi[0]-lo[0])*m)},${Math.round(lo[1]+(hi[1]-lo[1])*m)},${Math.round(lo[2]+(hi[2]-lo[2])*m)})`;
+}
+function hex(h){h=h.replace('#','');if(h.length===3)h=h.split('').map(x=>x+x).join('');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function mix(c1,c2,m){return `rgb(${Math.round(c1[0]+(c2[0]-c1[0])*m)},${Math.round(c1[1]+(c2[1]-c1[1])*m)},${Math.round(c1[2]+(c2[2]-c1[2])*m)})`;}
+
+/* ---------- panel 1: trajectories ---------- */
+function renderTraj(sim){
+  const cv=$("cv-traj"),{c,w,h}=fitCanvas(cv,430);
+  const g=sim.g,n=S.n,G=Gmat();const pad={l:44,r:14,t:12,b:30};
+  const iw=w-pad.l-pad.r,ih=h-pad.t-pad.b;
+  // y-range from mean ± person spread (approx via sd at endpoints) + residual
+  let ymin=Infinity,ymax=-Infinity;
+  const fine=[];for(let s=0;s<=(n-1)*8;s++)fine.push(s/8);
+  sim.people.forEach(pn=>{fine.forEach(t=>{const y=dot(zvec(t),g.map((gi,i)=>gi+pn.U[i]));if(y<ymin)ymin=y;if(y>ymax)ymax=y;});});
+  const sdmax=Math.sqrt(Math.max(varAt(0,G),varAt(n-1,G)));
+  ymin-=1.2*S.sigE;ymax+=1.2*S.sigE;const yp=(ymax-ymin)*0.06;ymin-=yp;ymax+=yp;
+  const X=t=>pad.l+(t/(n-1))*iw, Y=y=>pad.t+ih-((y-ymin)/(ymax-ymin))*ih;
+  c.clearRect(0,0,w,h);
+  // grid + y ticks
+  c.font='11px "IBM Plex Mono", monospace';c.textBaseline="middle";
+  niceTicks(ymin,ymax,5).forEach(v=>{const y=Y(v);c.strokeStyle=CSS("--grid");c.lineWidth=1;
+    c.beginPath();c.moveTo(pad.l,y);c.lineTo(w-pad.r,y);c.stroke();
+    c.fillStyle=CSS("--faint");c.textAlign="right";c.fillText(v.toFixed(0),pad.l-7,y);});
+  // x ticks (occasions)
+  c.textAlign="center";c.textBaseline="top";
+  for(let t=0;t<n;t++){c.fillStyle=CSS("--faint");c.fillText(t,X(t),h-pad.b+7);}
+  c.fillStyle=CSS("--muted");c.fillText("occasion (time)",pad.l+iw/2,h-13);
+  // knot marker (piecewise)
+  if(S.mode==="piecewise"&&S.knot<n){c.strokeStyle=CSS("--faint");c.setLineDash([3,4]);c.lineWidth=1;
+    c.beginPath();c.moveTo(X(S.knot),pad.t);c.lineTo(X(S.knot),pad.t+ih);c.stroke();c.setLineDash([]);}
+  // spaghetti (smooth latent curves), tinted by intercept deviation
+  const spread=S.tU0>0?S.tU0:1;
+  sim.people.forEach(pn=>{
+    c.strokeStyle=tint(pn.U0/(1.6*spread));c.globalAlpha=.42;c.lineWidth=1.3;c.beginPath();
+    fine.forEach((t,i)=>{const y=dot(zvec(t),g.map((gi,k)=>gi+pn.U[k]));i?c.lineTo(X(t),Y(y)):c.moveTo(X(t),Y(y));});
+    c.stroke();
+  });
+  c.globalAlpha=1;
+  // residual scatter at occasions (AR(1) process across occasions when ρ>0)
+  if(S.resid&&S.sigE>0){rng=mulberry(seed^0x9e37);const rho=S.rho,sw=Math.sqrt(1-rho*rho);
+    sim.people.forEach(pn=>{let e=0;
+      for(let t=0;t<n;t++){e = t===0? S.sigE*randn() : rho*e + sw*S.sigE*randn();
+        const y=dot(zvec(t),g.map((gi,k)=>gi+pn.U[k]))+e;
+        c.fillStyle=tint(pn.U0/(1.6*spread));c.globalAlpha=.5;c.beginPath();c.arc(X(t),Y(y),1.7,0,7);c.fill();}});
+    c.globalAlpha=1;}
+  // mean (fixed) curve — bold
+  c.strokeStyle=CSS("--primary");c.lineWidth=3.6;c.lineJoin="round";c.beginPath();
+  fine.forEach((t,i)=>{const y=dot(zvec(t),g);i?c.lineTo(X(t),Y(y)):c.moveTo(X(t),Y(y));});c.stroke();
+}
+
+/* ---------- panel 2: variance over time ---------- */
+function renderVar(){
+  const cv=$("cv-var"),{c,w,h}=fitCanvas(cv,250),G=Gmat(),n=S.n;
+  const pad={l:46,r:12,t:12,b:28},iw=w-pad.l-pad.r,ih=h-pad.t-pad.b;
+  const vals=[];for(let t=0;t<n;t++)vals.push(varAt(t,G));
+  let vmax=Math.max(...vals,S.sigE*S.sigE),vmin=0;vmax*=1.12;
+  const X=t=>pad.l+(t/(n-1))*iw,Y=v=>pad.t+ih-((v-vmin)/(vmax-vmin))*ih;
+  c.clearRect(0,0,w,h);c.font='11px "IBM Plex Mono", monospace';
+  c.textBaseline="middle";c.textAlign="right";
+  niceTicks(vmin,vmax,4).forEach(v=>{const y=Y(v);c.strokeStyle=CSS("--grid");c.lineWidth=1;
+    c.beginPath();c.moveTo(pad.l,y);c.lineTo(w-pad.r,y);c.stroke();c.fillStyle=CSS("--faint");c.fillText(v.toFixed(0),pad.l-7,y);});
+  // residual baseline
+  const yb=Y(S.sigE*S.sigE);c.strokeStyle=CSS("--muted");c.setLineDash([4,4]);c.lineWidth=1.3;
+  c.beginPath();c.moveTo(pad.l,yb);c.lineTo(w-pad.r,yb);c.stroke();c.setLineDash([]);
+  c.textAlign="left";c.textBaseline="bottom";c.fillStyle=CSS("--muted");c.fillText("σ²ₑ residual",pad.l+4,yb-3);
+  // area + line
+  const acc=hex(CSS("--accent"));
+  c.beginPath();c.moveTo(X(0),Y(vals[0]));for(let t=1;t<n;t++)c.lineTo(X(t),Y(vals[t]));
+  c.lineTo(X(n-1),Y(0));c.lineTo(X(0),Y(0));c.closePath();
+  c.fillStyle=`rgba(${acc[0]},${acc[1]},${acc[2]},.13)`;c.fill();
+  c.strokeStyle=CSS("--accent");c.lineWidth=2.6;c.beginPath();
+  for(let t=0;t<n;t++)t?c.lineTo(X(t),Y(vals[t])):c.moveTo(X(t),Y(vals[t]));c.stroke();
+  for(let t=0;t<n;t++){c.fillStyle=CSS("--accent");c.beginPath();c.arc(X(t),Y(vals[t]),2.6,0,7);c.fill();}
+  c.textAlign="center";c.textBaseline="top";c.fillStyle=CSS("--faint");
+  for(let t=0;t<n;t++)c.fillText(t,X(t),h-pad.b+7);
+}
+
+/* ---------- panel 3: correlation heatmap ---------- */
+function renderHM(){
+  const cv=$("cv-hm"),{c,w,h}=fitCanvas(cv,250),G=Gmat(),n=S.n;
+  const m=Math.min(w,h)-30,cell=m/n,ox=(w-m)/2+8,oy=6;
+  c.clearRect(0,0,w,h);
+  const lo=hex(CSS("--hm-lo")),mid=hex(CSS("--hm-mid")),hi=hex(CSS("--hm-hi"));
+  c.font='10px "IBM Plex Mono", monospace';
+  for(let i=0;i<n;i++)for(let j=0;j<n;j++){
+    const r=covST(i,j,G)/Math.sqrt(varAt(i,G)*varAt(j,G));
+    const x=ox+j*cell,y=oy+i*cell;
+    c.fillStyle = r<0.5? mix(lo,mid,Math.max(0,r)/0.5) : mix(mid,hi,(r-0.5)/0.5);
+    c.fillRect(x,y,cell-1.5,cell-1.5);
+    if(cell>26){c.fillStyle=r>0.62?"#fff":CSS("--ink");c.globalAlpha=.9;c.textAlign="center";c.textBaseline="middle";
+      c.fillText(r.toFixed(2).replace("0.","."),x+cell/2-0.75,y+cell/2);c.globalAlpha=1;}
+  }
+  // axis occasion labels
+  c.fillStyle=CSS("--faint");c.textBaseline="middle";c.textAlign="right";
+  for(let i=0;i<n;i++)c.fillText(i,ox-4,oy+i*cell+cell/2);
+  c.textAlign="center";c.textBaseline="top";
+  for(let j=0;j<n;j++)c.fillText(j,ox+j*cell+cell/2,oy+m+3);
+}
+
+/* ---------- equation + explainer ---------- */
+function renderEq(){
+  const fx=s=>`<span class="fx">${s}</span>`,rd=s=>`<span class="rd">${s}</span>`,op=s=>`<span class="op">${s}</span>`;
+  let e;
+  if(S.mode==="linear")
+    e=`y<sub>ti</sub> ${op("=")} (${fx("γ<sub>00</sub>")} ${op("+")} ${rd("U<sub>0i</sub>")}) ${op("+")} (${fx("γ<sub>10</sub>")} ${op("+")} ${rd("U<sub>1i</sub>")})·Time ${op("+")} e<sub>ti</sub>`;
+  else if(S.mode==="quadratic")
+    e=`y<sub>ti</sub> ${op("=")} (${fx("γ<sub>00</sub>")}${op("+")}${rd("U<sub>0i</sub>")}) ${op("+")} (${fx("γ<sub>10</sub>")}${op("+")}${rd("U<sub>1i</sub>")})·Time ${op("+")} (${fx("γ<sub>20</sub>")}${op("+")}${rd("U<sub>2i</sub>")})·Time<sup>2</sup> ${op("+")} e<sub>ti</sub>`;
+  else
+    e=`y<sub>ti</sub> ${op("=")} (${fx("γ<sub>00</sub>")}${op("+")}${rd("U<sub>0i</sub>")}) ${op("+")} (${fx("γ<sub>10</sub>")}${op("+")}${rd("U<sub>1i</sub>")})·Slope1 ${op("+")} (${fx("γ<sub>20</sub>")}${op("+")}${rd("U<sub>2i</sub>")})·Slope2 ${op("+")} e<sub>ti</sub>`;
+  $("eq").innerHTML=e;
+}
+function renderExplain(){
+  const G=Gmat(),n=S.n,v0=varAt(0,G),vn=varAt(n-1,G),ratio=vn/v0;
+  const shape={linear:"a straight line",quadratic:"a curve (accelerating or decelerating)",piecewise:"two joined line segments"}[S.mode];
+  let parts=[];
+  parts.push(`Every person follows <b>${shape}</b>; the bold blue line is the <b>average</b> trajectory set by the fixed effects γ.`);
+  if(S.tU0>0) parts.push(`<em>τ<sub>U0</sub></em> spreads people vertically at the intercept (between-person differences in level).`);
+  if(S.tU1>0.02) parts.push(`<em>τ<sub>U1</sub></em> lets each person have their own slope, so the curves <em>fan out</em> over time.`);
+  else parts.push(`With τ<sub>U1</sub> ≈ 0 the lines stay <em>parallel</em> — everyone changes at the same rate.`);
+  if(S.mode==="quadratic"&&S.tU2>0.02) parts.push(`<em>τ<sub>U2</sub></em> gives each person their own curvature (some bend up, some down).`);
+  if(Math.abs(S.r01)>0.05) parts.push(`The intercept–slope correlation <em>r<sub>01</sub> = ${S.r01.toFixed(2)}</em> means people who start ${S.r01>0?"higher tend to climb faster (the fan opens upward)":"higher tend to change more slowly (the fan converges)"}.`);
+  // adjacent-occasion (lag-1) correlation: random-effects share vs +AR residual
+  const z0=zvec(0),z1=zvec(1);let gcov=0;for(let i=0;i<z0.length;i++)for(let j=0;j<z1.length;j++)gcov+=z0[i]*G[i][j]*z1[j];
+  const d01=Math.sqrt(varAt(0,G)*varAt(1,G))||1;
+  const rG=gcov/d01, rFull=(gcov+S.sigE*S.sigE*S.rho)/d01, dAR=rFull-rG;
+  $("hm-note").textContent = S.rho>0.001
+    ? `lag-1 r = ${rG.toFixed(2)} → ${rFull.toFixed(2)} with AR (${dAR>=0?"+":""}${dAR.toFixed(2)})`
+    : `lag-1 r = ${rG.toFixed(2)}, set by the random effects`;
+  if(S.rho>0.05){
+    if(rG>0.3) parts.push(`Turning on an <em>AR(1) residual (ρ = ${S.rho.toFixed(2)})</em> lifts the adjacent-occasion correlation by only <em>${(dAR>=0?"+":"")+dAR.toFixed(2)}</em> — the random effects already generate this dependency, so an AR residual is largely <em>redundant</em> and usually doesn't improve fit.`);
+    else parts.push(`With the random-effect variances near zero, the <em>AR(1) residual (ρ = ${S.rho.toFixed(2)})</em> is now carrying the dependency itself — the "pure fluctuation" regime where a residual (ACS) structure genuinely helps.`);
+    parts.push(`ρ leaves the <b>total-variance</b> panel unchanged — AR(1) reshapes only the off-diagonal residual correlation, not each occasion's variance.`);
+  }
+  const ggrow=ratio>1.15?`grows to ${ratio.toFixed(1)}× its starting value`:ratio<0.87?`shrinks to ${ratio.toFixed(1)}× its starting value`:`stays roughly constant`;
+  parts.push(`Because of the random slopes, the <b>total variance ${ggrow}</b> from occasion 0 to ${n-1} — repeated measures are <b>not</b> equally variable, and nearby occasions correlate more strongly (see the heatmap).`);
+  $("explain").innerHTML=parts.join(" ");
+  // subtitles
+  $("traj-sub").innerHTML=`<b>${NP}</b> simulated people · shape = <b>${S.mode}</b>${S.resid?" · dots show observed values with residual noise":""}`;
+  $("var-note").textContent = ratio>1.15?"random slopes inflate variance at later occasions":ratio<0.87?"the fan converges — variance falls over time":"nearly flat (little slope variance)";
+}
+
+/* ---------- identifiability / mode UI ---------- */
+function syncUI(){
+  document.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.mode===S.mode)));
+  const show=(row,on)=>{const el=document.querySelector(`.sldrow[data-row="${row}"]`);if(el)el.classList.toggle("hide",!on);};
+  show("g20",S.mode!=="linear");show("tU2",S.mode==="quadratic");show("knot",S.mode==="piecewise");
+  // labels per mode
+  $("lb-g10").textContent = S.mode==="piecewise"?"slope 1 (before knot)":"linear slope";
+  $("lb-g20").textContent = S.mode==="piecewise"?"slope 2 (after knot)":"quadratic curvature";
+  $("lb-tU1").textContent = S.mode==="piecewise"?"slope-1 SD":"linear-slope SD";
+  $("lb-tU2").textContent = "quad-slope SD";
+  // knot range
+  const ks=$("s-knot");ks.max=String(S.n-1);if(S.knot>S.n-1){S.knot=S.n-1;ks.value=String(S.knot);}
+  // identifiability: random quadratic needs n>=4  (# random slopes = n-2)
+  const nd=$("note-id"),tU2=$("s-tU2");
+  if(S.mode==="quadratic"&&S.n<4){tU2.disabled=true;nd.classList.add("on");
+    nd.textContent=`Need n ≥ 4 occasions to estimate a random quadratic (# random slopes = n − 2 = ${S.n-2}). Increase occasions to free τ_U2.`;}
+  else{tU2.disabled=false;nd.classList.remove("on");}
+  $("leg-resid").style.display=S.resid?"":"none";
+}
+
+/* ---------- master render ---------- */
+function render(){
+  syncUI();
+  // readouts
+  $("v-g00").textContent=S.g00.toFixed(0);
+  $("v-g10").textContent=(S.g10>=0?"+":"")+S.g10.toFixed(1);
+  $("v-g20").textContent=(S.g20>=0?"+":"")+S.g20.toFixed(2);
+  $("v-tU0").textContent=S.tU0.toFixed(2);
+  $("v-tU1").textContent=S.tU1.toFixed(2);
+  $("v-tU2").textContent=S.tU2.toFixed(2);
+  $("v-r01").textContent=(S.r01>=0?"+":"")+S.r01.toFixed(2);
+  $("v-sigE").textContent=S.sigE.toFixed(2);
+  $("v-rho").textContent=(S.rho===0?"0 (i.i.d.)":S.rho.toFixed(2));
+  $("v-n").textContent=S.n;
+  $("v-knot").textContent=S.knot;
+  renderEq();
+  const sim=drawPeople();
+  renderTraj(sim);renderVar();renderHM();renderExplain();
+}
+
+/* ---------- wiring ---------- */
+const bind=(id,key,int)=>{const el=$(id);el.addEventListener("input",()=>{S[key]=int?parseInt(el.value):parseFloat(el.value);render();});};
+bind("s-g00","g00");bind("s-g10","g10");bind("s-g20","g20");
+bind("s-tU0","tU0");bind("s-tU1","tU1");bind("s-tU2","tU2");bind("s-r01","r01");
+bind("s-sigE","sigE");bind("s-rho","rho");bind("s-n","n",true);bind("s-knot","knot",true);
+document.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{S.mode=b.dataset.mode;render();}));
+$("resampleBtn").addEventListener("click",()=>{seed=(Math.random()*1e9)|0;render();});
+$("residBtn").addEventListener("click",()=>{S.resid=!S.resid;$("residBtn").setAttribute("aria-pressed",String(S.resid));render();});
+$("themeBtn").addEventListener("click",()=>{
+  const r=document.documentElement,cur=r.getAttribute("data-theme");
+  const dark=cur?cur==="dark":matchMedia("(prefers-color-scheme:dark)").matches;
+  r.setAttribute("data-theme",dark?"light":"dark");render();
+});
+addEventListener("resize",()=>{clearTimeout(window.__rt);window.__rt=setTimeout(render,120);});
+render();
+</script>
