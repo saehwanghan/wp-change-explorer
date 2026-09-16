@@ -1,4 +1,9 @@
-<title>Within-Person Change Explorer</title>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Random Effects of Time Explorer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -65,6 +70,7 @@ h1{font-family:"Spectral",Georgia,serif;font-weight:600;font-size:clamp(26px,3.4
 .seg button:hover{border-color:var(--primary);color:var(--ink);}
 .seg button[aria-pressed="true"]{background:var(--primary);border-color:var(--primary);
   color:#fff;box-shadow:0 4px 12px -4px var(--primary);}
+.seg.p4{grid-template-columns:1fr 1fr;margin-bottom:12px;}
 .gbox{border:1px dashed var(--line);border-radius:11px;padding:13px 14px 6px;margin-bottom:16px;
   background:var(--surface-2);transition:opacity .15s;}
 .gbox .gh{font-family:"IBM Plex Mono";font-size:10px;letter-spacing:.1em;text-transform:uppercase;
@@ -129,13 +135,15 @@ footer{margin-top:26px;padding-top:16px;border-top:1px solid var(--line);font-si
   display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-family:"IBM Plex Mono";}
 footer a{color:var(--primary);text-decoration:none;}
 </style>
+</head>
+<body>
 
 <div class="wrap">
   <header class="top">
     <div>
       <div class="brandline">HDF 380K.3 · Analyzing Development &amp; Change</div>
-      <h1>Within-Person Change Explorer</h1>
-      <p class="lede">Set the <b>shape of change</b> over time and the <b>random effects</b> that let people differ from the average trajectory. Watch how variance components reshape the fan of individual curves, grow the total variance across occasions, and induce a correlation pattern among repeated measures — the <b>G-side</b> companion to the covariance-structure (R-side) explorer.</p>
+      <h1>Random Effects of Time Explorer</h1>
+      <p class="lede">See how <b>individual differences in level and change</b> — the <b>random effects</b> of time — shape the <b>trajectories, variances, and correlations</b> of <b>within-person change</b> over time. Set them and watch all three update together — the <b>G-side</b> companion to the covariance-structure (R-side) explorer.</p>
     </div>
     <button class="tgl" id="themeBtn" aria-label="Toggle light or dark theme">◐ Theme</button>
   </header>
@@ -154,15 +162,15 @@ footer a{color:var(--primary);text-decoration:none;}
       <div class="gbox">
         <p class="gh fx"><span class="dot"></span>Fixed effects — the average curve (γ)</p>
         <div class="sldrow" data-row="g00">
-          <label><span class="nm"><span class="sym">γ<sub>00</sub></span> intercept</span><span class="val" id="v-g00"></span></label>
+          <label for="s-g00"><span class="nm"><span class="sym">γ<sub>00</sub></span> intercept</span><span class="val" id="v-g00"></span></label>
           <input type="range" id="s-g00" min="20" max="80" step="1" value="50">
         </div>
         <div class="sldrow" data-row="g10">
-          <label><span class="nm"><span class="sym">γ<sub>10</sub></span> <span id="lb-g10">linear slope</span></span><span class="val" id="v-g10"></span></label>
+          <label for="s-g10"><span class="nm"><span class="sym">γ<sub>10</sub></span> <span id="lb-g10">linear slope</span></span><span class="val" id="v-g10"></span></label>
           <input type="range" id="s-g10" min="-6" max="6" step="0.1" value="2.5">
         </div>
         <div class="sldrow" data-row="g20">
-          <label><span class="nm"><span class="sym">γ<sub>20</sub></span> <span id="lb-g20">quadratic</span></span><span class="val" id="v-g20"></span></label>
+          <label for="s-g20"><span class="nm"><span class="sym">γ<sub>20</sub></span> <span id="lb-g20">quadratic</span></span><span class="val" id="v-g20"></span></label>
           <input type="range" id="s-g20" min="-1" max="1" step="0.05" value="-0.35">
         </div>
       </div>
@@ -171,20 +179,20 @@ footer a{color:var(--primary);text-decoration:none;}
       <div class="gbox">
         <p class="gh rd"><span class="dot"></span>Random effects — how people differ (SD)</p>
         <div class="sldrow acc" data-row="tU0">
-          <label><span class="nm"><span class="sym">τ<sub>U0</sub></span> intercept SD</span><span class="val" id="v-tU0"></span></label>
+          <label for="s-tU0"><span class="nm"><span class="sym">τ<sub>U0</sub></span> intercept SD</span><span class="val" id="v-tU0"></span></label>
           <input type="range" class="acc" id="s-tU0" min="0" max="12" step="0.25" value="5">
         </div>
         <div class="sldrow acc" data-row="tU1">
-          <label><span class="nm"><span class="sym">τ<sub>U1</sub></span> <span id="lb-tU1">linear-slope SD</span></span><span class="val" id="v-tU1"></span></label>
+          <label for="s-tU1"><span class="nm"><span class="sym">τ<sub>U1</sub></span> <span id="lb-tU1">linear-slope SD</span></span><span class="val" id="v-tU1"></span></label>
           <input type="range" class="acc" id="s-tU1" min="0" max="3" step="0.05" value="1">
         </div>
         <div class="sldrow acc" data-row="tU2">
-          <label><span class="nm"><span class="sym">τ<sub>U2</sub></span> <span id="lb-tU2">quad-slope SD</span></span><span class="val" id="v-tU2"></span></label>
+          <label for="s-tU2"><span class="nm"><span class="sym">τ<sub>U2</sub></span> <span id="lb-tU2">quad-slope SD</span></span><span class="val" id="v-tU2"></span></label>
           <input type="range" class="acc" id="s-tU2" min="0" max="0.6" step="0.02" value="0.16">
         </div>
         <p class="note" id="note-id"></p>
         <div class="sldrow acc" data-row="r01">
-          <label><span class="nm"><span class="sym">r<sub>01</sub></span> intercept–slope corr</span><span class="val" id="v-r01"></span></label>
+          <label for="s-r01"><span class="nm"><span class="sym">r<sub>01</sub></span> intercept–slope corr</span><span class="val" id="v-r01"></span></label>
           <input type="range" class="acc" id="s-r01" min="-0.9" max="0.9" step="0.05" value="0">
         </div>
       </div>
@@ -193,19 +201,19 @@ footer a{color:var(--primary);text-decoration:none;}
       <div class="gbox">
         <p class="gh rs"><span class="dot"></span>Residual &amp; design</p>
         <div class="sldrow" data-row="sigE">
-          <label><span class="nm"><span class="sym">σ<sub>e</sub></span> residual SD</span><span class="val" id="v-sigE"></span></label>
+          <label for="s-sigE"><span class="nm"><span class="sym">σ<sub>e</sub></span> residual SD</span><span class="val" id="v-sigE"></span></label>
           <input type="range" id="s-sigE" min="0" max="7" step="0.25" value="2">
         </div>
         <div class="sldrow" data-row="rho">
-          <label><span class="nm"><span class="sym">ρ</span> AR(1) residual corr</span><span class="val" id="v-rho"></span></label>
+          <label for="s-rho"><span class="nm"><span class="sym">ρ</span> AR(1) residual corr</span><span class="val" id="v-rho"></span></label>
           <input type="range" id="s-rho" min="0" max="0.9" step="0.05" value="0">
         </div>
         <div class="sldrow" data-row="n">
-          <label><span class="nm"><span class="sym">n</span> occasions</span><span class="val" id="v-n"></span></label>
+          <label for="s-n"><span class="nm"><span class="sym">n</span> occasions</span><span class="val" id="v-n"></span></label>
           <input type="range" id="s-n" min="3" max="10" step="1" value="6">
         </div>
         <div class="sldrow" data-row="knot">
-          <label><span class="nm"><span class="sym">knot</span> breakpoint</span><span class="val" id="v-knot"></span></label>
+          <label for="s-knot"><span class="nm"><span class="sym">knot</span> breakpoint</span><span class="val" id="v-knot"></span></label>
           <input type="range" id="s-knot" min="1" max="8" step="1" value="3">
         </div>
       </div>
@@ -213,6 +221,17 @@ footer a{color:var(--primary);text-decoration:none;}
       <div class="row2">
         <button class="btn" id="resampleBtn">↻ Resample people</button>
         <button class="btn" id="residBtn" aria-pressed="true">Residual scatter</button>
+      </div>
+
+      <div class="ctl-h" style="margin-top:20px">Teaching presets</div>
+      <div class="seg p4" role="group" aria-label="Teaching presets">
+        <button data-preset="ri">Random intercept</button>
+        <button data-preset="fixed">Fixed slope</button>
+        <button data-preset="rslope">Random slope</button>
+        <button data-preset="ar">AR-only</button>
+      </div>
+      <div class="row2">
+        <button class="btn" id="resetBtn">⟲ Reset defaults</button>
       </div>
     </aside>
 
@@ -256,7 +275,7 @@ footer a{color:var(--primary);text-decoration:none;}
   </div>
 
   <footer>
-    <span>G-side random-effects simulator · pairs with the Covariance Structure Explorer</span>
+    <span>G-side random-effects simulator · pairs with the <a href="https://saehwanghan.github.io/covariance-explorer/" target="_blank" rel="noopener">Covariance Structure Explorer</a></span>
     <span>y<sub>ti</sub> = (γ + U<sub>i</sub>)′z<sub>t</sub> + e<sub>ti</sub></span>
   </footer>
 </div>
@@ -268,6 +287,13 @@ const CSS=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim
 
 /* ---------- state ---------- */
 const S={mode:"linear",g00:50,g10:2.5,g20:-0.35,tU0:5,tU1:1,tU2:0.16,r01:0,sigE:2,rho:0,n:6,knot:3,resid:true};
+const DEFAULTS={...S};
+const PRESETS={
+  ri:    {mode:"linear",g00:50,g10:0,  g20:-0.35,tU0:6,  tU1:0,   tU2:0.16,r01:0,  sigE:2,  rho:0,  n:6,knot:3,resid:true},
+  fixed: {mode:"linear",g00:50,g10:2.5,g20:-0.35,tU0:6,  tU1:0,   tU2:0.16,r01:0,  sigE:2,  rho:0,  n:6,knot:3,resid:true},
+  rslope:{mode:"linear",g00:50,g10:2.5,g20:-0.35,tU0:5,  tU1:1.2, tU2:0.16,r01:0.3,sigE:2,  rho:0,  n:6,knot:3,resid:true},
+  ar:    {mode:"linear",g00:50,g10:0,  g20:-0.35,tU0:0.5,tU1:0,   tU2:0.16,r01:0,  sigE:3.5,rho:0.6,n:6,knot:3,resid:true},
+};
 const NP=42;                         // people drawn
 let seed=20260911;
 const mulberry=s=>()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};
@@ -346,6 +372,7 @@ function renderTraj(sim){
   sim.people.forEach(pn=>{fine.forEach(t=>{const y=dot(zvec(t),g.map((gi,i)=>gi+pn.U[i]));if(y<ymin)ymin=y;if(y>ymax)ymax=y;});});
   const sdmax=Math.sqrt(Math.max(varAt(0,G),varAt(n-1,G)));
   ymin-=1.2*S.sigE;ymax+=1.2*S.sigE;const yp=(ymax-ymin)*0.06;ymin-=yp;ymax+=yp;
+  if(!(ymax-ymin>1e-6)){const mid=(ymin+ymax)/2;ymin=mid-1;ymax=mid+1;}
   const X=t=>pad.l+(t/(n-1))*iw, Y=y=>pad.t+ih-((y-ymin)/(ymax-ymin))*ih;
   c.clearRect(0,0,w,h);
   // grid + y ticks
@@ -385,7 +412,7 @@ function renderVar(){
   const cv=$("cv-var"),{c,w,h}=fitCanvas(cv,250),G=Gmat(),n=S.n;
   const pad={l:46,r:12,t:12,b:28},iw=w-pad.l-pad.r,ih=h-pad.t-pad.b;
   const vals=[];for(let t=0;t<n;t++)vals.push(varAt(t,G));
-  let vmax=Math.max(...vals,S.sigE*S.sigE),vmin=0;vmax*=1.12;
+  let vmax=Math.max(...vals,S.sigE*S.sigE),vmin=0;vmax = vmax>0 ? vmax*1.12 : 1;
   const X=t=>pad.l+(t/(n-1))*iw,Y=v=>pad.t+ih-((v-vmin)/(vmax-vmin))*ih;
   c.clearRect(0,0,w,h);c.font='11px "IBM Plex Mono", monospace';
   c.textBaseline="middle";c.textAlign="right";
@@ -412,15 +439,20 @@ function renderHM(){
   const cv=$("cv-hm"),{c,w,h}=fitCanvas(cv,250),G=Gmat(),n=S.n;
   const m=Math.min(w,h)-30,cell=m/n,ox=(w-m)/2+8,oy=6;
   c.clearRect(0,0,w,h);
-  const lo=hex(CSS("--hm-lo")),mid=hex(CSS("--hm-mid")),hi=hex(CSS("--hm-hi"));
+  const neg=hex(CSS("--crit")),neu=hex(CSS("--hm-lo")),pos=hex(CSS("--hm-hi"));
   c.font='10px "IBM Plex Mono", monospace';
   for(let i=0;i<n;i++)for(let j=0;j<n;j++){
-    const r=covST(i,j,G)/Math.sqrt(varAt(i,G)*varAt(j,G));
+    const denom=Math.sqrt(varAt(i,G)*varAt(j,G));
+    const r=denom>0?covST(i,j,G)/denom:NaN;              // undefined when an occasion variance is 0
     const x=ox+j*cell,y=oy+i*cell;
-    c.fillStyle = r<0.5? mix(lo,mid,Math.max(0,r)/0.5) : mix(mid,hi,(r-0.5)/0.5);
+    c.fillStyle = isNaN(r)? CSS("--grid")                // diverging: neg <- neutral -> pos
+                : r>=0? mix(neu,pos,Math.min(1,r))
+                : mix(neu,neg,Math.min(1,-r));
     c.fillRect(x,y,cell-1.5,cell-1.5);
-    if(cell>26){c.fillStyle=r>0.62?"#fff":CSS("--ink");c.globalAlpha=.9;c.textAlign="center";c.textBaseline="middle";
-      c.fillText(r.toFixed(2).replace("0.","."),x+cell/2-0.75,y+cell/2);c.globalAlpha=1;}
+    if(cell>26){c.textAlign="center";c.textBaseline="middle";c.globalAlpha=.9;
+      if(isNaN(r)){c.fillStyle=CSS("--faint");c.fillText("—",x+cell/2-0.75,y+cell/2);}
+      else{c.fillStyle=Math.abs(r)>0.62?"#fff":CSS("--ink");c.fillText(r.toFixed(2).replace("0.","."),x+cell/2-0.75,y+cell/2);}
+      c.globalAlpha=1;}
   }
   // axis occasion labels
   c.fillStyle=CSS("--faint");c.textBaseline="middle";c.textAlign="right";
@@ -459,12 +491,12 @@ function renderExplain(){
     ? `lag-1 r = ${rG.toFixed(2)} → ${rFull.toFixed(2)} with AR (${dAR>=0?"+":""}${dAR.toFixed(2)})`
     : `lag-1 r = ${rG.toFixed(2)}, set by the random effects`;
   if(S.rho>0.05){
-    if(rG>0.3) parts.push(`Turning on an <em>AR(1) residual (ρ = ${S.rho.toFixed(2)})</em> lifts the adjacent-occasion correlation by only <em>${(dAR>=0?"+":"")+dAR.toFixed(2)}</em> — the random effects already generate this dependency, so an AR residual is largely <em>redundant</em> and usually doesn't improve fit.`);
+    if(rG>0.3) parts.push(`The <em>AR(1) residual (ρ = ${S.rho.toFixed(2)})</em> adds dependence <em>beyond</em> that induced by the random effects, lifting the adjacent-occasion correlation by <em>${(dAR>=0?"+":"")+dAR.toFixed(2)}</em>. Its incremental contribution looks modest under these settings; whether it improves <b>model fit</b> must be evaluated empirically.`);
     else parts.push(`With the random-effect variances near zero, the <em>AR(1) residual (ρ = ${S.rho.toFixed(2)})</em> is now carrying the dependency itself — the "pure fluctuation" regime where a residual (ACS) structure genuinely helps.`);
     parts.push(`ρ leaves the <b>total-variance</b> panel unchanged — AR(1) reshapes only the off-diagonal residual correlation, not each occasion's variance.`);
   }
   const ggrow=ratio>1.15?`grows to ${ratio.toFixed(1)}× its starting value`:ratio<0.87?`shrinks to ${ratio.toFixed(1)}× its starting value`:`stays roughly constant`;
-  parts.push(`Because of the random slopes, the <b>total variance ${ggrow}</b> from occasion 0 to ${n-1} — repeated measures are <b>not</b> equally variable, and nearby occasions correlate more strongly (see the heatmap).`);
+  parts.push(`Because of the random slopes, the <b>total variance ${ggrow}</b> from occasion 0 to ${n-1} — repeated measures are <b>not</b> equally variable. Random effects make the correlations <b>vary across pairs of occasions</b>; the heatmap shows the resulting pattern.`);
   $("explain").innerHTML=parts.join(" ");
   // subtitles
   $("traj-sub").innerHTML=`<b>${NP}</b> simulated people · shape = <b>${S.mode}</b>${S.resid?" · dots show observed values with residual noise":""}`;
@@ -473,16 +505,16 @@ function renderExplain(){
 
 /* ---------- identifiability / mode UI ---------- */
 function syncUI(){
-  document.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.mode===S.mode)));
+  document.querySelectorAll(".seg button[data-mode]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.mode===S.mode)));
   const show=(row,on)=>{const el=document.querySelector(`.sldrow[data-row="${row}"]`);if(el)el.classList.toggle("hide",!on);};
-  show("g20",S.mode!=="linear");show("tU2",S.mode==="quadratic");show("knot",S.mode==="piecewise");
+  show("g20",S.mode!=="linear");show("tU2",S.mode!=="linear");show("knot",S.mode==="piecewise");
   // labels per mode
   $("lb-g10").textContent = S.mode==="piecewise"?"slope 1 (before knot)":"linear slope";
   $("lb-g20").textContent = S.mode==="piecewise"?"slope 2 (after knot)":"quadratic curvature";
   $("lb-tU1").textContent = S.mode==="piecewise"?"slope-1 SD":"linear-slope SD";
-  $("lb-tU2").textContent = "quad-slope SD";
+  $("lb-tU2").textContent = S.mode==="piecewise"?"slope-2 SD":"quad-slope SD";
   // knot range
-  const ks=$("s-knot");ks.max=String(S.n-1);if(S.knot>S.n-1){S.knot=S.n-1;ks.value=String(S.knot);}
+  const ks=$("s-knot");ks.max=String(S.n-2);if(S.knot>S.n-2){S.knot=S.n-2;ks.value=String(S.knot);}if(S.knot<1){S.knot=1;ks.value="1";}
   // identifiability: random quadratic needs n>=4  (# random slopes = n-2)
   const nd=$("note-id"),tU2=$("s-tU2");
   if(S.mode==="quadratic"&&S.n<4){tU2.disabled=true;nd.classList.add("on");
@@ -516,7 +548,18 @@ const bind=(id,key,int)=>{const el=$(id);el.addEventListener("input",()=>{S[key]
 bind("s-g00","g00");bind("s-g10","g10");bind("s-g20","g20");
 bind("s-tU0","tU0");bind("s-tU1","tU1");bind("s-tU2","tU2");bind("s-r01","r01");
 bind("s-sigE","sigE");bind("s-rho","rho");bind("s-n","n",true);bind("s-knot","knot",true);
-document.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{S.mode=b.dataset.mode;render();}));
+document.querySelectorAll(".seg button[data-mode]").forEach(b=>b.addEventListener("click",()=>{S.mode=b.dataset.mode;render();}));
+function applyState(o){
+  Object.assign(S,o);
+  const set=(id,v)=>{const el=$(id);if(el)el.value=v;};
+  set("s-g00",S.g00);set("s-g10",S.g10);set("s-g20",S.g20);
+  set("s-tU0",S.tU0);set("s-tU1",S.tU1);set("s-tU2",S.tU2);set("s-r01",S.r01);
+  set("s-sigE",S.sigE);set("s-rho",S.rho);set("s-n",S.n);set("s-knot",S.knot);
+  $("residBtn").setAttribute("aria-pressed",String(S.resid));
+  render();
+}
+document.querySelectorAll(".seg button[data-preset]").forEach(b=>b.addEventListener("click",()=>applyState(PRESETS[b.dataset.preset])));
+$("resetBtn").addEventListener("click",()=>applyState(DEFAULTS));
 $("resampleBtn").addEventListener("click",()=>{seed=(Math.random()*1e9)|0;render();});
 $("residBtn").addEventListener("click",()=>{S.resid=!S.resid;$("residBtn").setAttribute("aria-pressed",String(S.resid));render();});
 $("themeBtn").addEventListener("click",()=>{
@@ -527,3 +570,5 @@ $("themeBtn").addEventListener("click",()=>{
 addEventListener("resize",()=>{clearTimeout(window.__rt);window.__rt=setTimeout(render,120);});
 render();
 </script>
+</body>
+</html>

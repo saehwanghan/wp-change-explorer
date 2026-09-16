@@ -15,7 +15,8 @@ matrix update together.
 - **Total variance over time** — Var(y_t) across occasions, showing why repeated measures
   are not equally variable once slopes vary.
 - **Implied correlation matrix** — the pattern the random effects induce; add an AR(1)
-  residual (rho) to see it contribute little once random effects are in the model
+  residual (rho) to see the dependence it adds beyond the random effects. Its incremental
+  contribution is often modest, but whether it improves model fit must be judged empirically
   (the R-side / G-side story).
 
 ## The R-side companion
