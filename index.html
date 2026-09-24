@@ -100,6 +100,8 @@ input[type=range]:disabled{opacity:.4;cursor:not-allowed;}
 input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:3px;}
 .note{font-size:11px;line-height:1.45;color:var(--warn);margin:2px 0 8px;font-family:"IBM Plex Sans";display:none;}
 .note.on{display:block;}
+.cread{font-size:11.5px;line-height:1.5;color:var(--muted);margin:9px 2px 2px;font-family:"IBM Plex Sans";}
+.cread b{color:var(--ink);font-weight:600;} .cread em{color:var(--accent);font-style:normal;}
 .row2{display:flex;gap:8px;margin-top:4px;}
 .btn{flex:1;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);border-radius:9px;
   padding:9px;font-family:"IBM Plex Sans";font-size:12.5px;font-weight:500;cursor:pointer;
@@ -218,6 +220,16 @@ footer a{color:var(--primary);text-decoration:none;}
         </div>
       </div>
 
+      <!-- CENTERING (interpretation only; the data do not change) -->
+      <div class="gbox">
+        <p class="gh"><span class="dot" style="background:var(--accent)"></span>Where is time&nbsp;=&nbsp;0? (centering)</p>
+        <div class="sldrow" data-row="cen">
+          <label for="s-cen"><span class="nm"><span class="sym">c</span> center at occasion</span><span class="val" id="v-cen"></span></label>
+          <input type="range" id="s-cen" min="0" max="5" step="1" value="0">
+        </div>
+        <p class="cread" id="cen-read"></p>
+      </div>
+
       <div class="row2">
         <button class="btn" id="resampleBtn">↻ Resample people</button>
         <button class="btn" id="residBtn" aria-pressed="true">Residual scatter</button>
@@ -286,13 +298,13 @@ const $=id=>document.getElementById(id);
 const CSS=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 
 /* ---------- state ---------- */
-const S={mode:"linear",g00:50,g10:2.5,g20:-0.35,tU0:5,tU1:1,tU2:0.16,r01:0,sigE:2,rho:0,n:6,knot:3,resid:true};
+const S={mode:"linear",g00:50,g10:2.5,g20:-0.35,tU0:5,tU1:1,tU2:0.16,r01:0,sigE:2,rho:0,n:6,knot:3,cen:0,resid:true};
 const DEFAULTS={...S};
 const PRESETS={
-  ri:    {mode:"linear",g00:50,g10:0,  g20:-0.35,tU0:6,  tU1:0,   tU2:0.16,r01:0,  sigE:2,  rho:0,  n:6,knot:3,resid:true},
-  fixed: {mode:"linear",g00:50,g10:2.5,g20:-0.35,tU0:6,  tU1:0,   tU2:0.16,r01:0,  sigE:2,  rho:0,  n:6,knot:3,resid:true},
-  rslope:{mode:"linear",g00:50,g10:2.5,g20:-0.35,tU0:5,  tU1:1.2, tU2:0.16,r01:0.3,sigE:2,  rho:0,  n:6,knot:3,resid:true},
-  ar:    {mode:"linear",g00:50,g10:0,  g20:-0.35,tU0:0.5,tU1:0,   tU2:0.16,r01:0,  sigE:3.5,rho:0.6,n:6,knot:3,resid:true},
+  ri:    {mode:"linear",g00:50,g10:0,  g20:-0.35,tU0:6,  tU1:0,   tU2:0.16,r01:0,  sigE:2,  rho:0,  n:6,knot:3,cen:0,resid:true},
+  fixed: {mode:"linear",g00:50,g10:2.5,g20:-0.35,tU0:6,  tU1:0,   tU2:0.16,r01:0,  sigE:2,  rho:0,  n:6,knot:3,cen:0,resid:true},
+  rslope:{mode:"linear",g00:50,g10:2.5,g20:-0.35,tU0:5,  tU1:1.2, tU2:0.16,r01:0.3,sigE:2,  rho:0,  n:6,knot:3,cen:0,resid:true},
+  ar:    {mode:"linear",g00:50,g10:0,  g20:-0.35,tU0:0.5,tU1:0,   tU2:0.16,r01:0,  sigE:3.5,rho:0.6,n:6,knot:3,cen:0,resid:true},
 };
 const NP=42;                         // people drawn
 let seed=20260911;
@@ -332,6 +344,13 @@ function quad(z,G){let s=0;for(let i=0;i<z.length;i++)for(let j=0;j<z.length;j++
 function residCov(s,t){return S.sigE*S.sigE*Math.pow(S.rho,Math.abs(s-t));}
 function varAt(t,G){return quad(zvec(t),G)+S.sigE*S.sigE;}
 function covST(s,t,G){let c=0,zs=zvec(s),zt=zvec(t);for(let i=0;i<zs.length;i++)for(let j=0;j<zt.length;j++)c+=zs[i]*G[i][j]*zt[j];return c+residCov(s,t);}
+/* ---- re-centering time at occasion c (interpretation only; the fit is invariant) ---- */
+// The "intercept" is the level at t=c; its random part is U·z(c). These change with c even
+// though the model, trajectories and total-variance/correlation panels do not.
+function meanAt(c){return dot(zvec(c),gamma());}                 // fixed intercept at center c
+function intVarAt(c){return quad(zvec(c),Gmat());}              // BP variance of the level at c
+function intSlopeCovAt(c){const G=Gmat(),z=zvec(c);return G[1].reduce((s,gij,j)=>s+gij*z[j],0);} // cov(level@c, U1)
+function intSlopeCorrAt(c){const iv=intVarAt(c),sv=Gmat()[1][1];return (iv>1e-9&&sv>1e-9)?intSlopeCovAt(c)/Math.sqrt(iv*sv):NaN;}
 
 /* ---------- draw people ---------- */
 function drawPeople(){
@@ -387,6 +406,12 @@ function renderTraj(sim){
   // knot marker (piecewise)
   if(S.mode==="piecewise"&&S.knot<n){c.strokeStyle=CSS("--faint");c.setLineDash([3,4]);c.lineWidth=1;
     c.beginPath();c.moveTo(X(S.knot),pad.t);c.lineTo(X(S.knot),pad.t+ih);c.stroke();c.setLineDash([]);}
+  // centering reference line: where "time 0" (the intercept) is measured
+  if(S.cen>0){const xc=X(S.cen);c.strokeStyle=CSS("--accent");c.setLineDash([2,3]);c.lineWidth=1.5;
+    c.beginPath();c.moveTo(xc,pad.t);c.lineTo(xc,pad.t+ih);c.stroke();c.setLineDash([]);
+    c.fillStyle=CSS("--accent");c.font='10px "IBM Plex Mono", monospace';c.textBaseline="top";
+    c.textAlign = S.cen>=n-1?"right":"center"; c.fillText("time 0", S.cen>=n-1?xc-2:xc, pad.t+1);
+    const ym=dot(zvec(S.cen),g);c.beginPath();c.arc(xc,Y(ym),3.2,0,7);c.fill();}
   // spaghetti (smooth latent curves), tinted by intercept deviation
   const spread=S.tU0>0?S.tU0:1;
   sim.people.forEach(pn=>{
@@ -515,6 +540,8 @@ function syncUI(){
   $("lb-tU2").textContent = S.mode==="piecewise"?"slope-2 SD":"quad-slope SD";
   // knot range
   const ks=$("s-knot");ks.max=String(S.n-2);if(S.knot>S.n-2){S.knot=S.n-2;ks.value=String(S.knot);}if(S.knot<1){S.knot=1;ks.value="1";}
+  // centering range: any occasion 0..n-1
+  const cs=$("s-cen");cs.max=String(S.n-1);if(S.cen>S.n-1){S.cen=S.n-1;cs.value=String(S.cen);}if(S.cen<0){S.cen=0;cs.value="0";}
   // identifiability: random quadratic needs n>=4  (# random slopes = n-2)
   const nd=$("note-id"),tU2=$("s-tU2");
   if(S.mode==="quadratic"&&S.n<4){tU2.disabled=true;nd.classList.add("on");
@@ -538,23 +565,32 @@ function render(){
   $("v-rho").textContent=(S.rho===0?"0 (i.i.d.)":S.rho.toFixed(2));
   $("v-n").textContent=S.n;
   $("v-knot").textContent=S.knot;
+  $("v-cen").textContent=S.cen;
   renderEq();
   const sim=drawPeople();
-  renderTraj(sim);renderVar();renderHM();renderExplain();
+  renderTraj(sim);renderVar();renderHM();renderExplain();renderCentering();
+}
+/* ---------- centering readout ---------- */
+function renderCentering(){
+  const el=$("cen-read"),c=S.cen,rawR=(S.r01>=0?"+":"")+S.r01.toFixed(2),rawCov=intSlopeCovAt(0);
+  if(c===0){el.innerHTML=`Time 0 is the <b>first occasion</b>, so the sliders above are the intercept's parameters: τ<sub>U0</sub> = ${S.tU0.toFixed(2)}, intercept–slope cov = ${rawCov.toFixed(2)} (r<sub>01</sub> = ${rawR}). Slide <b>c</b> to re-center and watch them change — the data stay the same.`;return;}
+  const g0=meanAt(c),sd=Math.sqrt(Math.max(0,intVarAt(c))),cov=intSlopeCovAt(c),r=intSlopeCorrAt(c);
+  const rtxt=isNaN(r)?"—":(r>=0?"+":"")+r.toFixed(2);
+  el.innerHTML=`Re-centered at <b>occasion ${c}</b>: fixed intercept <b>γ<sub>00</sub> = ${g0.toFixed(1)}</b> · random-intercept variance <b>τ<sub>U0</sub><sup>2</sup> = ${(sd*sd).toFixed(1)}</b> (SD ${sd.toFixed(2)}, was ${S.tU0.toFixed(2)}) · intercept–slope <b>cov = ${cov.toFixed(2)}</b> (was ${rawCov.toFixed(2)}) → <b>r = ${rtxt}</b> (was ${rawR}). <em>Same data — only the intercept's meaning changed.</em>`;
 }
 
 /* ---------- wiring ---------- */
 const bind=(id,key,int)=>{const el=$(id);el.addEventListener("input",()=>{S[key]=int?parseInt(el.value):parseFloat(el.value);render();});};
 bind("s-g00","g00");bind("s-g10","g10");bind("s-g20","g20");
 bind("s-tU0","tU0");bind("s-tU1","tU1");bind("s-tU2","tU2");bind("s-r01","r01");
-bind("s-sigE","sigE");bind("s-rho","rho");bind("s-n","n",true);bind("s-knot","knot",true);
+bind("s-sigE","sigE");bind("s-rho","rho");bind("s-n","n",true);bind("s-knot","knot",true);bind("s-cen","cen",true);
 document.querySelectorAll(".seg button[data-mode]").forEach(b=>b.addEventListener("click",()=>{S.mode=b.dataset.mode;render();}));
 function applyState(o){
   Object.assign(S,o);
   const set=(id,v)=>{const el=$(id);if(el)el.value=v;};
   set("s-g00",S.g00);set("s-g10",S.g10);set("s-g20",S.g20);
   set("s-tU0",S.tU0);set("s-tU1",S.tU1);set("s-tU2",S.tU2);set("s-r01",S.r01);
-  set("s-sigE",S.sigE);set("s-rho",S.rho);set("s-n",S.n);set("s-knot",S.knot);
+  set("s-sigE",S.sigE);set("s-rho",S.rho);set("s-n",S.n);set("s-knot",S.knot);set("s-cen",S.cen);
   $("residBtn").setAttribute("aria-pressed",String(S.resid));
   render();
 }
