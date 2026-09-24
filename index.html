@@ -163,6 +163,7 @@ footer a{color:var(--primary);text-decoration:none;}
       <!-- FIXED EFFECTS -->
       <div class="gbox">
         <p class="gh fx"><span class="dot"></span>Fixed effects — the average curve (γ)</p>
+        <p class="cread" style="margin:0 2px 8px">γ<sub>00</sub> is the average level at <b>occasion 0</b> (the first wave).</p>
         <div class="sldrow" data-row="g00">
           <label for="s-g00"><span class="nm"><span class="sym">γ<sub>00</sub></span> intercept</span><span class="val" id="v-g00"></span></label>
           <input type="range" id="s-g00" min="20" max="80" step="1" value="50">
@@ -180,6 +181,7 @@ footer a{color:var(--primary);text-decoration:none;}
       <!-- RANDOM EFFECTS -->
       <div class="gbox">
         <p class="gh rd"><span class="dot"></span>Random effects — how people differ (SD)</p>
+        <p class="cread" style="margin:0 2px 8px">τ<sub>U0</sub> and r<sub>01</sub> describe the intercept at <b>occasion 0</b> (the first wave); the centering control below re-expresses them at any other wave.</p>
         <div class="sldrow acc" data-row="tU0">
           <label for="s-tU0"><span class="nm"><span class="sym">τ<sub>U0</sub></span> intercept SD</span><span class="val" id="v-tU0"></span></label>
           <input type="range" class="acc" id="s-tU0" min="0" max="12" step="0.25" value="5">
@@ -383,7 +385,7 @@ function mix(c1,c2,m){return `rgb(${Math.round(c1[0]+(c2[0]-c1[0])*m)},${Math.ro
 /* ---------- panel 1: trajectories ---------- */
 function renderTraj(sim){
   const cv=$("cv-traj"),{c,w,h}=fitCanvas(cv,430);
-  const g=sim.g,n=S.n,G=Gmat();const pad={l:44,r:14,t:12,b:30};
+  const g=sim.g,n=S.n,G=Gmat();const pad={l:44,r:14,t:38,b:30};
   const iw=w-pad.l-pad.r,ih=h-pad.t-pad.b;
   // y-range from mean ± person spread (approx via sd at endpoints) + residual
   let ymin=Infinity,ymax=-Infinity;
@@ -403,15 +405,20 @@ function renderTraj(sim){
   c.textAlign="center";c.textBaseline="top";
   for(let t=0;t<n;t++){c.fillStyle=CSS("--faint");c.fillText(t,X(t),h-pad.b+7);}
   c.fillStyle=CSS("--muted");c.fillText("occasion (time)",pad.l+iw/2,h-13);
+  // top axis: recentered time (t − c), so time 0 sits at the centering occasion
+  for(let t=0;t<n;t++){const rv=t-S.cen,isZero=t===S.cen;
+    c.fillStyle=isZero?CSS("--accent"):CSS("--faint");
+    c.font=(isZero?'bold ':'')+'11px "IBM Plex Mono", monospace';
+    c.textAlign="center";c.textBaseline="bottom";c.fillText(String(rv),X(t),pad.t-7);}
+  c.font='10px "IBM Plex Sans"';c.fillStyle=CSS("--muted");c.textAlign="center";c.textBaseline="top";
+  c.fillText("recentered time (t − c)",pad.l+iw/2,3);
   // knot marker (piecewise)
   if(S.mode==="piecewise"&&S.knot<n){c.strokeStyle=CSS("--faint");c.setLineDash([3,4]);c.lineWidth=1;
     c.beginPath();c.moveTo(X(S.knot),pad.t);c.lineTo(X(S.knot),pad.t+ih);c.stroke();c.setLineDash([]);}
   // centering reference line: where "time 0" (the intercept) is measured
   if(S.cen>0){const xc=X(S.cen);c.strokeStyle=CSS("--accent");c.setLineDash([2,3]);c.lineWidth=1.5;
     c.beginPath();c.moveTo(xc,pad.t);c.lineTo(xc,pad.t+ih);c.stroke();c.setLineDash([]);
-    c.fillStyle=CSS("--accent");c.font='10px "IBM Plex Mono", monospace';c.textBaseline="top";
-    c.textAlign = S.cen>=n-1?"right":"center"; c.fillText("time 0", S.cen>=n-1?xc-2:xc, pad.t+1);
-    const ym=dot(zvec(S.cen),g);c.beginPath();c.arc(xc,Y(ym),3.2,0,7);c.fill();}
+    c.fillStyle=CSS("--accent");const ym=dot(zvec(S.cen),g);c.beginPath();c.arc(xc,Y(ym),3.2,0,7);c.fill();}
   // spaghetti (smooth latent curves), tinted by intercept deviation
   const spread=S.tU0>0?S.tU0:1;
   sim.people.forEach(pn=>{
