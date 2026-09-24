@@ -160,6 +160,16 @@ footer a{color:var(--primary);text-decoration:none;}
         <button data-mode="piecewise" aria-pressed="false">Piecewise</button>
       </div>
 
+      <!-- CENTERING (interpretation only; the data do not change) -->
+      <div class="gbox">
+        <p class="gh"><span class="dot" style="background:var(--accent)"></span>Where is time&nbsp;=&nbsp;0? (centering)</p>
+        <div class="sldrow" data-row="cen">
+          <label for="s-cen"><span class="nm"><span class="sym">c</span> center at occasion</span><span class="val" id="v-cen"></span></label>
+          <input type="range" id="s-cen" min="0" max="5" step="1" value="0">
+        </div>
+        <p class="cread" id="cen-read"></p>
+      </div>
+
       <!-- FIXED EFFECTS -->
       <div class="gbox">
         <p class="gh fx"><span class="dot"></span>Fixed effects — the average curve (γ)</p>
@@ -181,7 +191,7 @@ footer a{color:var(--primary);text-decoration:none;}
       <!-- RANDOM EFFECTS -->
       <div class="gbox">
         <p class="gh rd"><span class="dot"></span>Random effects — how people differ (SD)</p>
-        <p class="cread" style="margin:0 2px 8px">τ<sub>U0</sub> and r<sub>01</sub> describe the intercept at <b>occasion 0</b> (the first wave); the centering control below re-expresses them at any other wave.</p>
+        <p class="cread" style="margin:0 2px 8px">τ<sub>U0</sub> and r<sub>01</sub> describe the intercept at <b>occasion 0</b> (the first wave); the centering control above re-expresses them at any other wave.</p>
         <div class="sldrow acc" data-row="tU0">
           <label for="s-tU0"><span class="nm"><span class="sym">τ<sub>U0</sub></span> intercept SD</span><span class="val" id="v-tU0"></span></label>
           <input type="range" class="acc" id="s-tU0" min="0" max="12" step="0.25" value="5">
@@ -220,16 +230,6 @@ footer a{color:var(--primary);text-decoration:none;}
           <label for="s-knot"><span class="nm"><span class="sym">knot</span> breakpoint</span><span class="val" id="v-knot"></span></label>
           <input type="range" id="s-knot" min="1" max="8" step="1" value="3">
         </div>
-      </div>
-
-      <!-- CENTERING (interpretation only; the data do not change) -->
-      <div class="gbox">
-        <p class="gh"><span class="dot" style="background:var(--accent)"></span>Where is time&nbsp;=&nbsp;0? (centering)</p>
-        <div class="sldrow" data-row="cen">
-          <label for="s-cen"><span class="nm"><span class="sym">c</span> center at occasion</span><span class="val" id="v-cen"></span></label>
-          <input type="range" id="s-cen" min="0" max="5" step="1" value="0">
-        </div>
-        <p class="cread" id="cen-read"></p>
       </div>
 
       <div class="row2">
@@ -580,7 +580,7 @@ function render(){
 /* ---------- centering readout ---------- */
 function renderCentering(){
   const el=$("cen-read"),c=S.cen,rawR=(S.r01>=0?"+":"")+S.r01.toFixed(2),rawCov=intSlopeCovAt(0);
-  if(c===0){el.innerHTML=`Time 0 is the <b>first occasion</b>, so the sliders above are the intercept's parameters: τ<sub>U0</sub> = ${S.tU0.toFixed(2)}, intercept–slope cov = ${rawCov.toFixed(2)} (r<sub>01</sub> = ${rawR}). Slide <b>c</b> to re-center and watch them change — the data stay the same.`;return;}
+  if(c===0){el.innerHTML=`Time 0 is the <b>first occasion</b>, so the intercept's parameters are τ<sub>U0</sub> = ${S.tU0.toFixed(2)}, intercept–slope cov = ${rawCov.toFixed(2)} (r<sub>01</sub> = ${rawR}). Slide <b>c</b> to re-center and watch them change — the data stay the same.`;return;}
   const g0=meanAt(c),sd=Math.sqrt(Math.max(0,intVarAt(c))),cov=intSlopeCovAt(c),r=intSlopeCorrAt(c);
   const rtxt=isNaN(r)?"—":(r>=0?"+":"")+r.toFixed(2);
   el.innerHTML=`Re-centered at <b>occasion ${c}</b>: fixed intercept <b>γ<sub>00</sub> = ${g0.toFixed(1)}</b> · random-intercept variance <b>τ<sub>U0</sub><sup>2</sup> = ${(sd*sd).toFixed(1)}</b> (SD ${sd.toFixed(2)}, was ${S.tU0.toFixed(2)}) · intercept–slope <b>cov = ${cov.toFixed(2)}</b> (was ${rawCov.toFixed(2)}) → <b>r = ${rtxt}</b> (was ${rawR}). <em>Same data — only the intercept's meaning changed.</em>`;
